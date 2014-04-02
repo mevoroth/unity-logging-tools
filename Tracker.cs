@@ -31,6 +31,11 @@ public class Tracker : MonoBehaviour
 	private string _filename;
 	private Queue<PushedData> _pushedDatas = new Queue<PushedData>();
 
+	private FileStream _excelFs;
+	private int _excelBufferSize = 0;
+	private string _excelBuffer = "";
+	private string _excelFilename;
+
 	private bool _enabled = false;
 
 	IEnumerator log()
@@ -78,6 +83,10 @@ public class Tracker : MonoBehaviour
 		for (; File.Exists(path + "/PlayerLog_" + i + ".log"); ++i);
 
 		_filename = path + "/PlayerLog_" + i + ".log";
+		_excelFilename = path + "/PlayerLog_" + i + ".xls";
+
+		_excelFs = System.IO.File.Open(_excelFilename, FileMode.Append);
+		_excelFs.Write(System.Text.Encoding.UTF8.GetBytes("<table>"), 0, 7);
 
 		_StartCoroutine();
 	}
@@ -94,6 +103,8 @@ public class Tracker : MonoBehaviour
 	void OnDestroy()
 	{
 		_StopCoroutine();
+		_excelFs.Write(System.Text.Encoding.UTF8.GetBytes("</table>"), 0, 8);
+		_excelFs.Close();
 	}
 
 	private void _StopCoroutine()
@@ -102,6 +113,7 @@ public class Tracker : MonoBehaviour
 		{
 			_enabled = false;
 			StopCoroutine("log");
+			_ArchiveExcel();
 			_Archive();
 		}
 	}
@@ -124,6 +136,12 @@ public class Tracker : MonoBehaviour
 		_index = 0;
 	}
 
+	private void _ArchiveExcel()
+	{
+		_excelFs.Write(System.Text.Encoding.UTF8.GetBytes(_excelBuffer), 0, _excelBuffer.Length);
+		_excelBufferSize = 0;
+	}
+
 	private void _Copy(byte[] src)
 	{
 		if (_index + src.Length > BUFFER_SIZE)
@@ -140,5 +158,22 @@ public class Tracker : MonoBehaviour
 		pd.Time = Time.realtimeSinceStartup;
 		pd.Object = to;
 		_pushedDatas.Enqueue(pd);
+	}
+
+	public void PushExcelLine(string[] cells)
+	{
+		string buffer = "<tr>";
+		buffer += "<td>" + Time.realtimeSinceStartup + "</td>";
+		for (int i = 0, c = cells.Length; i < c; ++i)
+		{
+			buffer += "<td>" + cells[i] + "</td>";
+		}
+		buffer += "</td>";
+		_excelBuffer += buffer;
+		_excelBufferSize += buffer.Length;
+		if (_excelBufferSize >= BUFFER_SIZE)
+		{
+			_ArchiveExcel();
+		}
 	}
 }

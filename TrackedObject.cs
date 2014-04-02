@@ -20,6 +20,11 @@ abstract public class TrackedObject
 		int read = fs.Read(b, 0, 12);
 		return read == 12;
 	}
+	protected bool _get16Bytes(FileStream fs, byte[] b)
+	{
+		int read = fs.Read(b, 0, 16);
+		return read == 16;
+	}
 	abstract public void Reset();
 	abstract public void TrackVariation();
 }
