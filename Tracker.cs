@@ -168,7 +168,7 @@ public class Tracker : MonoBehaviour
 		{
 			buffer += "<td>" + cells[i] + "</td>";
 		}
-		buffer += "</td>";
+		buffer += "</tr>";
 		_excelBuffer += buffer;
 		_excelBufferSize += buffer.Length;
 		if (_excelBufferSize >= BUFFER_SIZE)
